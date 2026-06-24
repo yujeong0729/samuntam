@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>물 순환율 평가 제도 필요성 분석</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --bg-deep:#0a1f29;
+  --bg-panel:#0f2733;
+  --bg-panel-2:#13303d;
+  --line:#1d4252;
+  --line-soft:#173a48;
+  --aqua:#3fd6c4;
+  --aqua-dim:#2a9d8f;
+  --amber:#f0a857;
+  --coral:#e2725b;
+  --green:#6fcf73;
+  --text:#e7f3f3;
+  --text-dim:#8fb2ba;
+  --text-faint:#5d818a;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:transparent;color:var(--text);font-family:'Noto Sans KR',sans-serif;}
+body{padding:0;}
+
+.wrap{
+  background:var(--bg-deep);
+  background-image:
+    radial-gradient(circle at 85% -10%, rgba(63,214,196,0.10), transparent 45%),
+    radial-gradient(circle at 0% 100%, rgba(63,214,196,0.06), transparent 40%);
+  border-radius:18px;
+  padding:34px 34px 40px;
+  max-width:1180px;
+  margin:0 auto;
+  border:1px solid var(--line);
+}
+
+/* ---------- header ---------- */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:24px;
+  border-bottom:1px solid var(--line);
+  padding-bottom:20px;
+  margin-bottom:26px;
+  flex-wrap:wrap;
+}
+.eyebrow{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px;
+  letter-spacing:0.16em;
+  color:var(--aqua);
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+h1{
+  font-family:'Space Grotesk','Noto Sans KR',sans-serif;
+  font-weight:700;
+  font-size:26px;
+  margin:0 0 8px;
+  letter-spacing:-0.01em;
+  color:#fff;
+}
+.sub{
+  color:var(--text-dim);
+  font-size:13.5px;
+  line-height:1.6;
+  max-width:560px;
+}
+.note-pill{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  color:var(--amber);
+  border:1px solid rgba(240,168,87,0.35);
+  background:rgba(240,168,87,0.08);
+  padding:7px 12px;
+  border-radius:7px;
+  white-space:nowrap;
+  line-height:1.5;
+  max-width:280px;
+}
+
+/* ---------- layout grid ---------- */
+.grid{
+  display:grid;
+  grid-template-columns:340px 1fr;
+  gap:22px;
+}
+@media (max-width:880px){ .grid{ grid-template-columns:1fr; } }
+
+.panel{
+  background:var(--bg-panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:20px;
+}
+.panel h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:14.5px;
+  margin:0 0 14px;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.panel h2 .tag{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  color:var(--aqua);
+  border:1px solid var(--line-soft);
+  padding:2px 7px;
+  border-radius:5px;
+}
+
+/* ---------- form ---------- */
+.field{ margin-bottom:13px; }
+.field label{
+  display:block;
+  font-size:12px;
+  color:var(--text-dim);
+  margin-bottom:5px;
+}
+.field input, .field select{
+  width:100%;
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  color:var(--text);
+  padding:9px 10px;
+  border-radius:8px;
+  font-size:13.5px;
+  font-family:'IBM Plex Mono',monospace;
+}
+.field input::placeholder{ color:var(--text-faint); font-family:'Noto Sans KR',sans-serif; }
+.field select{ font-family:'Noto Sans KR',sans-serif; }
+.field input:focus, .field select:focus{
+  outline:none;
+  border-color:var(--aqua);
+  box-shadow:0 0 0 3px rgba(63,214,196,0.15);
+}
+.field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+.btn{
+  width:100%;
+  padding:11px;
+  border-radius:8px;
+  border:none;
+  font-weight:700;
+  font-size:13.5px;
+  cursor:pointer;
+  font-family:'Noto Sans KR',sans-serif;
+  transition:transform .12s ease, opacity .12s ease;
+}
+.btn:active{ transform:scale(0.98); }
+.btn-primary{ background:var(--aqua); color:#06201d; margin-top:4px; }
+.btn-primary:hover{ opacity:0.9; }
+.btn-ghost{
+  background:transparent;
+  border:1px solid var(--line);
+  color:var(--text-dim);
+  margin-top:8px;
+}
+.btn-ghost:hover{ border-color:var(--aqua); color:var(--aqua); }
+
+/* ---------- summary cards ---------- */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:20px;
+}
+@media (max-width:880px){ .cards{ grid-template-columns:repeat(2,1fr); } }
+.card{
+  background:var(--bg-panel);
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:14px 16px;
+}
+.card .k{ font-size:11px; color:var(--text-dim); margin-bottom:8px; }
+.card .v{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:21px;
+  font-weight:600;
+  color:#fff;
+}
+.card .v span{ font-size:12px; color:var(--text-dim); font-weight:400; }
+.card.accent .v{ color:var(--aqua); }
+.card.warn .v{ color:var(--amber); }
+
+/* ---------- chart ---------- */
+.chart-box{ position:relative; height:300px; margin-bottom:6px; }
+.legend-row{
+  display:flex; gap:16px; flex-wrap:wrap;
+  font-size:11.5px; color:var(--text-dim);
+  margin-top:10px; padding-top:12px; border-top:1px solid var(--line-soft);
+}
+.legend-row .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:6px; }
+
+/* ---------- table ---------- */
+table{ width:100%; border-collapse:collapse; font-size:12.5px; }
+thead th{
+  text-align:left;
+  font-size:10.5px;
+  color:var(--text-faint);
+  text-transform:uppercase;
+  letter-spacing:0.05em;
+  font-weight:500;
+  padding:8px 10px;
+  border-bottom:1px solid var(--line);
+  font-family:'IBM Plex Mono',monospace;
+}
+tbody td{
+  padding:10px 10px;
+  border-bottom:1px solid var(--line-soft);
+  color:var(--text);
+}
+tbody tr:hover{ background:rgba(63,214,196,0.04); }
+.mono{ font-family:'IBM Plex Mono',monospace; }
+.grade{
+  display:inline-block;
+  width:26px; height:26px;
+  border-radius:7px;
+  text-align:center;
+  line-height:26px;
+  font-weight:700;
+  font-family:'Space Grotesk',sans-serif;
+  font-size:13px;
+}
+.grade-S{ background:rgba(63,214,196,0.18); color:var(--aqua); }
+.grade-A{ background:rgba(111,207,115,0.18); color:var(--green); }
+.grade-B{ background:rgba(240,168,87,0.18); color:var(--amber); }
+.grade-C{ background:rgba(226,114,91,0.16); color:#e2a98f; }
+.grade-D{ background:rgba(226,114,91,0.22); color:var(--coral); }
+.del-btn{
+  background:none; border:none; color:var(--text-faint);
+  cursor:pointer; font-size:15px; padding:2px 6px;
+}
+.del-btn:hover{ color:var(--coral); }
+.empty-row td{ text-align:center; color:var(--text-faint); padding:26px 0; font-size:12.5px; }
+
+/* ---------- summary text ---------- */
+.summary-text{
+  background:var(--bg-panel-2);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:16px 18px;
+  font-size:13px;
+  line-height:1.8;
+  color:var(--text);
+  white-space:pre-wrap;
+  font-family:'Noto Sans KR',sans-serif;
+}
+.section-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:15px;
+  color:#fff;
+  margin:26px 0 12px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+}
+.section-title::before{
+  content:'';
+  width:5px; height:5px;
+  background:var(--aqua);
+  border-radius:50%;
+  display:inline-block;
+}
+.copy-row{ display:flex; justify-content:flex-end; margin-top:10px; }
+.copy-row button{
+  background:none; border:1px solid var(--line);
+  color:var(--text-dim); font-size:11.5px;
+  padding:6px 12px; border-radius:7px; cursor:pointer;
+  font-family:'IBM Plex Mono',monospace;
+}
+.copy-row button:hover{ border-color:var(--aqua); color:var(--aqua); }
+
+.foot-note{
+  margin-top:22px;
+  font-size:11px;
+  color:var(--text-faint);
+  line-height:1.7;
+  border-top:1px solid var(--line);
+  padding-top:14px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <div class="eyebrow">Water Circulation Rate Evaluation · 제도 검토용 분석도구</div>
+      <h1>물 순환율 평가 제도 필요성 분석</h1>
+      <div class="sub">기업의 총 물 사용량, 재이용 비율, 절감 성과를 함께 비교하여 평가 제도 적용이 필요한 대상을 식별하기 위한 분석 도구입니다.</div>
+    </div>
+    <div class="note-pill">⚠ 등급 기준 및 산정 방식은 예시이며, 실제 제도 설계 시 조정 가능한 가안입니다.</div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: INPUT PANEL -->
+    <div class="panel">
+      <h2>기업 데이터 입력 <span class="tag">INPUT</span></h2>
+
+      <div class="field">
+        <label>기업명</label>
+        <input id="f-name" type="text" placeholder="예: A제지공업">
+      </div>
+
+      <div class="field">
+        <label>업종</label>
+        <select id="f-sector">
+          <option value="제조업">제조업</option>
+          <option value="화학">화학</option>
+          <option value="반도체·전자">반도체·전자</option>
+          <option value="식품·음료">식품·음료</option>
+          <option value="섬유·염색">섬유·염색</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>총 물 사용량 (톤/월)</label>
+        <input id="f-total" type="number" min="0" placeholder="예: 18000">
+      </div>
+
+      <div class="field">
+        <label>물 재이용량 (톤/월)</label>
+        <input id="f-reuse" type="number" min="0" placeholder="예: 4500">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>재이용 투자비 (백만원)</label>
+          <input id="f-invest" type="number" min="0" placeholder="선택">
+        </div>
+        <div class="field">
+          <label>연간 절감액 (백만원)</label>
+          <input id="f-saving" type="number" min="0" placeholder="선택">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="addCompany()">+ 기업 추가하기</button>
+      <button class="btn btn-ghost" onclick="loadSample()">샘플 데이터 불러오기</button>
+      <button class="btn btn-ghost" onclick="clearAll()">전체 초기화</button>
+
+      <div class="foot-note">
+        재이용률 = 재이용량 ÷ 총 사용량 × 100<br>
+        등급 기준(예시) — S 80%↑ · A 60~80% · B 40~60% · C 20~40% · D 20%↓<br>
+        제도 필요성 지수는 "사용량 규모"와 "낮은 재이용률"이 함께 클수록 높아지도록 산정됩니다.
+      </div>
+    </div>
+
+    <!-- RIGHT: RESULTS -->
+    <div>
+      <div class="cards">
+        <div class="card">
+          <div class="k">등록 기업 수</div>
+          <div class="v" id="card-count">0<span> 개사</span></div>
+        </div>
+        <div class="card accent">
+          <div class="k">평균 재이용률</div>
+          <div class="v" id="card-avg">–<span>%</span></div>
+        </div>
+        <div class="card warn">
+          <div class="k">제도 적용 권고 (C·D)</div>
+          <div class="v" id="card-priority">0<span> 개사</span></div>
+        </div>
+        <div class="card">
+          <div class="k">총 잠재 절감액</div>
+          <div class="v" id="card-savings">0<span> 백만원</span></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>사용량 – 재이용률 우선순위 매트릭스 <span class="tag">QUADRANT</span></h2>
+        <div class="chart-box"><canvas id="quadChart"></canvas></div>
+        <div class="legend-row">
+          <span><span class="dot" style="background:var(--coral)"></span>고사용·저재이용 (우선 적용 권고)</span>
+          <span><span class="dot" style="background:var(--amber)"></span>저사용·저재이용</span>
+          <span><span class="dot" style="background:var(--green)"></span>고사용·고재이용 (모범)</span>
+          <span><span class="dot" style="background:var(--aqua)"></span>저사용·고재이용</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">기업별 비교 현황</div>
+  <div class="panel" style="padding:10px 20px 18px;">
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>기업명</th><th>업종</th><th>총사용량(톤/월)</th><th>재이용량(톤/월)</th>
+            <th>재이용률</th><th>등급</th><th>연간 절감액</th><th>필요성 지수</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr class="empty-row"><td colspan="9">아직 등록된 기업이 없습니다. 좌측에서 데이터를 입력하거나 샘플 데이터를 불러오세요.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-title">자동 생성 분석 요약</div>
+  <div class="panel">
+    <div class="summary-text" id="summary-text">기업 데이터를 1개 이상 입력하면 분석 요약문이 자동으로 생성됩니다.</div>
+    <div class="copy-row"><button onclick="copySummary()">요약문 복사</button></div>
+  </div>
+
+</div>
+
+<script>
+let companies = [];
+let idCounter = 1;
+let quadChart = null;
+
+function grade(rate){
+  if(rate>=80) return 'S';
+  if(rate>=60) return 'A';
+  if(rate>=40) return 'B';
+  if(rate>=20) return 'C';
+  return 'D';
+}
+
+function fmt(n, digits=0){
+  return Number(n).toLocaleString('ko-KR', {maximumFractionDigits:digits, minimumFractionDigits:digits});
+}
+
+function addCompany(){
+  const name = document.getElementById('f-name').value.trim();
+  const sector = document.getElementById('f-sector').value;
+  const total = parseFloat(document.getElementById('f-total').value);
+  const reuse = parseFloat(document.getElementById('f-reuse').value);
+  const invest = parseFloat(document.getElementById('f-invest').value) || 0;
+  const saving = parseFloat(document.getElementById('f-saving').value) || 0;
+
+  if(!name){ alert('기업명을 입력해 주세요.'); return; }
+  if(isNaN(total) || total<=0){ alert('총 물 사용량을 올바르게 입력해 주세요.'); return; }
+  if(isNaN(reuse) || reuse<0){ alert('재이용량을 올바르게 입력해 주세요.'); return; }
+  if(reuse>total){ alert('재이용량이 총 사용량보다 클 수 없습니다.'); return; }
+
+  companies.push({ id:idCounter++, name, sector, total, reuse, invest, saving });
+  ['f-name','f-total','f-reuse','f-invest','f-saving'].forEach(id=>document.getElementById(id).value='');
+  render();
+}
+
+function removeCompany(id){
+  companies = companies.filter(c=>c.id!==id);
+  render();
+}
+
+function clearAll(){
+  if(companies.length===0) return;
+  if(confirm('등록된 모든 기업 데이터를 삭제하시겠습니까?')){
+    companies = [];
+    render();
+  }
+}
+
+function loadSample(){
+  companies = [
+    {id:idCounter++, name:'A제지공업', sector:'제조업', total:22000, reuse:3300, invest:850, saving:120},
+    {id:idCounter++, name:'B화학소재', sector:'화학', total:31000, reuse:9300, invest:1800, saving:410},
+    {id:idCounter++, name:'C반도체부품', sector:'반도체·전자', total:15500, reuse:12400, invest:2600, saving:680},
+    {id:idCounter++, name:'D식품가공', sector:'식품·음료', total:6800, reuse:1360, invest:0, saving:0},
+    {id:idCounter++, name:'E섬유염색', sector:'섬유·염색', total:27000, reuse:5400, invest:1100, saving:190},
+    {id:idCounter++, name:'F정밀화학', sector:'화학', total:9400, reuse:7050, invest:900, saving:260},
+  ];
+  render();
+}
+
+function computeRows(){
+  return companies.map(c=>{
+    const rate = (c.reuse/c.total)*100;
+    const g = grade(rate);
+    // 필요성 지수: 사용량 규모(정규화) × 저재이용 정도 — 0~100 스케일
+    return { ...c, rate, grade:g };
+  });
+}
+
+function render(){
+  const rows = computeRows();
+  const tbody = document.getElementById('table-body');
+
+  if(rows.length===0){
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="9">아직 등록된 기업이 없습니다. 좌측에서 데이터를 입력하거나 샘플 데이터를 불러오세요.</td></tr>';
+  } else {
+    const maxTotal = Math.max(...rows.map(r=>r.total));
+    const scored = rows.map(r=>{
+      const sizeScore = r.total/maxTotal;           // 0~1
+      const lowReuseScore = (100-r.rate)/100;        // 0~1
+      const need = Math.round(sizeScore*lowReuseScore*100);
+      return {...r, need};
+    }).sort((a,b)=>b.need-a.need);
+
+    tbody.innerHTML = scored.map(r=>`
+      <tr>
+        <td>${r.name}</td>
+        <td>${r.sector}</td>
+        <td class="mono">${fmt(r.total)}</td>
+        <td class="mono">${fmt(r.reuse)}</td>
+        <td class="mono">${fmt(r.rate,1)}%</td>
+        <td><span class="grade grade-${r.grade}">${r.grade}</span></td>
+        <td class="mono">${r.saving? fmt(r.saving)+'백만원' : '-'}</td>
+        <td class="mono">${r.need}</td>
+        <td><button class="del-btn" onclick="removeCompany(${r.id})" title="삭제">✕</button></td>
+      </tr>
+    `).join('');
+  }
+
+  updateCards(rows);
+  updateChart(rows);
+  updateSummary(rows);
+}
+
+function updateCards(rows){
+  document.getElementById('card-count').innerHTML = rows.length + '<span> 개사</span>';
+  if(rows.length===0){
+    document.getElementById('card-avg').innerHTML = '–<span>%</span>';
+    document.getElementById('card-priority').innerHTML = '0<span> 개사</span>';
+    document.getElementById('card-savings').innerHTML = '0<span> 백만원</span>';
+    return;
+  }
+  const avg = rows.reduce((s,r)=>s+r.rate,0)/rows.length;
+  const priorityCount = rows.filter(r=>r.grade==='C'||r.grade==='D').length;
+  const totalSaving = rows.reduce((s,r)=>s+(r.saving||0),0);
+
+  document.getElementById('card-avg').innerHTML = fmt(avg,1)+'<span>%</span>';
+  document.getElementById('card-priority').innerHTML = priorityCount+'<span> 개사</span>';
+  document.getElementById('card-savings').innerHTML = fmt(totalSaving)+'<span> 백만원</span>';
+}
+
+function quadrantColor(total, rate, avgTotal, avgRate){
+  const highUse = total>=avgTotal;
+  const highReuse = rate>=avgRate;
+  if(highUse && !highReuse) return '#e2725b';   // 우선 적용 권고
+  if(!highUse && !highReuse) return '#f0a857';
+  if(highUse && highReuse) return '#6fcf73';
+  return '#3fd6c4';
+}
+
+function updateChart(rows){
+  const ctx = document.getElementById('quadChart').getContext('2d');
+  if(quadChart) quadChart.destroy();
+
+  if(rows.length===0){
+    quadChart = new Chart(ctx, { type:'scatter', data:{datasets:[]}, options:baseChartOptions(0,100,0,100) });
+    return;
+  }
+
+  const avgTotal = rows.reduce((s,r)=>s+r.total,0)/rows.length;
+  const avgRate = rows.reduce((s,r)=>s+r.rate,0)/rows.length;
+  const maxTotal = Math.max(...rows.map(r=>r.total)) * 1.15;
+
+  const data = rows.map(r=>({
+    x:r.total, y:r.rate, label:r.name,
+    color:quadrantColor(r.total,r.rate,avgTotal,avgRate)
+  }));
+
+  quadChart = new Chart(ctx, {
+    type:'scatter',
+    data:{
+      datasets:[{
+        data:data,
+        pointRadius:8,
+        pointHoverRadius:10,
+        backgroundColor:data.map(d=>d.color),
+        borderColor:'rgba(255,255,255,0.5)',
+        borderWidth:1,
+      }]
+    },
+    options:{
+      ...baseChartOptions(0, maxTotal, 0, 100),
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:(ctx)=>{
+              const d = ctx.raw;
+              return `${d.label} — 사용량 ${fmt(d.x)}톤 / 재이용률 ${fmt(d.y,1)}%`;
+            }
+          }
+        },
+        annotation:undefined
+      }
+    },
+    plugins:[{
+      id:'quadLines',
+      afterDraw(chart){
+        const {ctx, chartArea, scales} = chart;
+        const xMid = scales.x.getPixelForValue(avgTotal);
+        const yMid = scales.y.getPixelForValue(avgRate);
+        ctx.save();
+        ctx.strokeStyle = 'rgba(143,178,186,0.35)';
+        ctx.setLineDash([4,4]);
+        ctx.beginPath();
+        ctx.moveTo(xMid, chartArea.top);
+        ctx.lineTo(xMid, chartArea.bottom);
+        ctx.moveTo(chartArea.left, yMid);
+        ctx.lineTo(chartArea.right, yMid);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }]
+  });
+}
+
+function baseChartOptions(xmin,xmax,ymin,ymax){
+  return {
+    responsive:true,
+    maintainAspectRatio:false,
+    scales:{
+      x:{
+        min:xmin, max:xmax,
+        title:{display:true, text:'총 물 사용량 (톤/월)', color:'#8fb2ba', font:{size:11}},
+        grid:{color:'rgba(29,66,82,0.6)'},
+        ticks:{color:'#8fb2ba', font:{size:10}}
+      },
+      y:{
+        min:ymin, max:ymax,
+        title:{display:true, text:'재이용률 (%)', color:'#8fb2ba', font:{size:11}},
+        grid:{color:'rgba(29,66,82,0.6)'},
+        ticks:{color:'#8fb2ba', font:{size:10}}
+      }
+    },
+    plugins:{ legend:{display:false} }
+  };
+}
+
+function updateSummary(rows){
+  const el = document.getElementById('summary-text');
+  if(rows.length===0){
+    el.textContent = '기업 데이터를 1개 이상 입력하면 분석 요약문이 자동으로 생성됩니다.';
+    return;
+  }
+
+  const n = rows.length;
+  const avgRate = rows.reduce((s,r)=>s+r.rate,0)/n;
+  const priority = rows.filter(r=>r.grade==='C'||r.grade==='D').sort((a,b)=>a.rate-b.rate);
+  const exemplary = rows.filter(r=>r.grade==='S'||r.grade==='A').sort((a,b)=>b.rate-a.rate);
+  const totalSaving = rows.reduce((s,r)=>s+(r.saving||0),0);
+  const totalUsage = rows.reduce((s,r)=>s+r.total,0);
+
+  let text = `본 분석은 총 ${n}개 기업의 물 사용 현황을 대상으로, 총 물 사용량과 물 재이용 비율, 절감 성과를 비교하여 물 순환율 평가 제도 도입의 필요성을 검토한 결과이다.\n\n`;
+
+  text += `조사 대상 기업의 월평균 총 물 사용량은 ${fmt(totalUsage/n)}톤이며, 평균 재이용률은 ${fmt(avgRate,1)}%로 나타났다. `;
+
+  if(priority.length>0){
+    const names = priority.map(r=>`${r.name}(재이용률 ${fmt(r.rate,1)}%)`).join(', ');
+    text += `이 중 재이용률이 40% 미만으로 분류된 ${priority.length}개 기업(${names})은 물 사용량 대비 재이용 실적이 낮아, 제도 적용 시 우선 검토 대상으로 식별된다.\n\n`;
+  } else {
+    text += `현재 등록된 기업 중 재이용률이 40% 미만인 기업은 없어, 전반적으로 양호한 재이용 수준을 보이고 있다.\n\n`;
+  }
+
+  if(exemplary.length>0){
+    const names = exemplary.map(r=>r.name).join(', ');
+    text += `반면 ${names}은 60% 이상의 재이용률을 달성하여 모범적인 물 재이용 사례로 평가되며, 제도 설계 시 우수 기준의 참고 사례로 활용 가능하다. `;
+  }
+
+  if(totalSaving>0){
+    text += `한편 절감액이 보고된 기업의 연간 절감 성과는 합계 ${fmt(totalSaving)}백만원으로, 재이용률이 높은 기업일수록 절감 성과도 상대적으로 큰 경향을 보였다.\n\n`;
+  } else {
+    text += `\n\n`;
+  }
+
+  text += `종합하면, 사용량 규모와 재이용률을 함께 고려한 제도 필요성 지수 상위 기업은 ${rows.slice().sort((a,b)=>{
+    const maxTotal = Math.max(...rows.map(x=>x.total));
+    const needA = (a.total/maxTotal)*(100-a.rate);
+    const needB = (b.total/maxTotal)*(100-b.rate);
+    return needB-needA;
+  }).slice(0,Math.min(3,n)).map(r=>r.name).join(', ')}이며, 이들 기업을 중심으로 단계적 제도 적용을 검토할 필요가 있다. 다만 본 결과는 예시 데이터 및 단순화된 산정 기준에 기반한 시사점으로, 실제 제도화 과정에서는 업종별 특성과 추가적인 정책 기준을 반영한 보완 검토가 필요하다.`;
+
+  el.textContent = text;
+}
+
+function copySummary(){
+  const text = document.getElementById('summary-text').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = document.querySelector('.copy-row button');
+    const original = btn.textContent;
+    btn.textContent = '복사 완료';
+    setTimeout(()=>btn.textContent=original, 1500);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
