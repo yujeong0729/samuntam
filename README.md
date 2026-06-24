@@ -1,1 +1,1 @@
-[# samuntam](https://yujeong0729.github.io/samuntam/WaterCalculation.html)
+https://yujeong0729.github.io/samuntam/WaterCalculation.html
